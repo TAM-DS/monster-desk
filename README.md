@@ -37,7 +37,4 @@ python -m pytest tests/ -q
 streamlit run app.py
 ```
 
-## Interview line
 
-Monster Heavy proves the boundary survives a dead worker.  
-Monster Desk shows the seats so a hiring manager can see who is not allowed to trade.
