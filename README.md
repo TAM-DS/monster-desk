@@ -17,6 +17,22 @@ Monster Heavy has **no frontend** on purpose. This repo is only the four seats.
 
 A simulated fill is not a street fill. Paper only.
 
+## See the seats
+
+These are screenshots of the running console, not mockups.
+
+**01 · Bound ticket + simulated fill** — Risk froze the digest. Execution submitted that digest only. The banner says it is not a street fill.
+
+![Bound ticket and simulated fill](docs/screenshots/01-ticket-bind.png)
+
+**02 · Execution denied** — Cheat attempts to change the name at send. Desk returns `DENIED: ExecutionMayNotMutateTicket`.
+
+![Execution may not mutate ticket](docs/screenshots/02-monster-desk-research.png)
+
+**03 · Audit tail** — propose and bind succeeded. The mutated submit stayed `ok = false`. History was not erased.
+
+![Audit tail with denied mutate](docs/screenshots/03-audit-monster-desk.png)
+
 ## The demo (90 seconds)
 
 1. Research proposes `BUY 100 AAPL`.
@@ -37,4 +53,7 @@ python -m pytest tests/ -q
 streamlit run app.py
 ```
 
+## Interview line
 
+Monster Heavy proves the boundary survives a dead worker.  
+Monster Desk shows the seats so a hiring manager can see who is not allowed to trade.
