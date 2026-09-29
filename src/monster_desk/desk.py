@@ -96,6 +96,7 @@ class Desk:
     ticket: Ticket | None = None
     bound: BoundTicket | None = None
     fill: PaperFill | None = None
+    halted: bool = False
 
     def _log(self, seat: str, action: str, detail: str, ok: bool) -> None:
         self.events.append(
@@ -108,6 +109,11 @@ class Desk:
             }
         )
 
+    def _ensure_active(self, seat: str, action: str) -> None:
+        if self.halted:
+            self._log(seat, action, "DENIED: DeskHalted", False)
+            raise DeskRefusal("DeskHalted")
+
     def research_propose(
         self,
         *,
@@ -119,6 +125,7 @@ class Desk:
         thesis: str,
         grounding: str,
     ) -> Ticket:
+        self._ensure_active("research", "propose")
         if self.ticket is not None:
             raise DeskRefusal("TicketAlreadyProposed")
         ticket = Ticket(
@@ -135,6 +142,7 @@ class Desk:
         return ticket
 
     def risk_bind(self, actor: str = "Risk") -> BoundTicket:
+        self._ensure_active("risk", "bind")
         if self.ticket is None:
             raise DeskRefusal("NoTicket")
         if self.bound is not None:
@@ -157,6 +165,10 @@ class Desk:
         mutate_symbol: str | None = None,
         mutate_qty: str | None = None,
     ) -> PaperFill:
+        self._ensure_active("execution", "submit")
+        if self.fill is not None:
+            self._log("execution", "submit", "DENIED: TicketAlreadyFilled", False)
+            raise DeskRefusal("TicketAlreadyFilled")
         if self.bound is None:
             self._log("execution", "submit", "DENIED: TicketNotBound", False)
             raise DeskRefusal("TicketNotBound")
@@ -187,4 +199,8 @@ class Desk:
         return fill
 
     def surveillance_halt(self, reason: str) -> None:
+        if self.halted:
+            self._log("surveillance", "halt", "DENIED: DeskAlreadyHalted", False)
+            raise DeskRefusal("DeskAlreadyHalted")
+        self.halted = True
         self._log("surveillance", "halt", reason, True)
