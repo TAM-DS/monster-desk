@@ -9,17 +9,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from monster_desk.desk import Desk, DeskRefusal
 
-st.set_page_config(page_title="Monster Desk", layout="wide")
-st.title("Monster Desk")
-st.caption(
-    "Companion console to TAM-DS/monster-heavy. "
-    "I was a trader. I did not build agents that trade. I built the desk that will not let them."
-)
+st.set_page_config(page_title="Monster Desk | Governed Paper Trading", layout="wide")
+st.title("MONSTER DESK")
+st.caption("Governed paper-trading console · Four seats · No broker connection · No autonomous execution")
+st.markdown("**Research proposes. Risk binds. Execution submits only the bound ticket. Surveillance can halt the desk.**")
 
 if "desk" not in st.session_state:
     st.session_state.desk = Desk()
 
 desk: Desk = st.session_state.desk
+
+if desk.halted:
+    st.error("DESK HALTED — proposals, risk binding, and submissions are blocked for this session.")
+elif desk.fill is not None:
+    st.success("PAPER FILL RECORDED — this ticket cannot be submitted again.")
+elif desk.bound is not None:
+    st.info("RISK BOUND — only this ticket digest can reach simulated execution.")
+else:
+    st.info("AWAITING RISK BINDING — execution is not authorized.")
 
 r, k, x, a = st.columns(4)
 
@@ -54,7 +61,7 @@ with r:
 
 with k:
     st.subheader("2 · Risk")
-    st.write("Binds the digest. Cannot rewrite terms.")
+    st.write("Human-operated demo approval: binds the proposed digest without rewriting its terms.")
     if st.button("Bind ticket"):
         try:
             b = desk.risk_bind("Risk")
@@ -70,6 +77,7 @@ with x:
     claimed = st.text_input(
         "Claimed digest",
         value=desk.bound.ticket_digest if desk.bound else "",
+        key=f"claimed-{desk.bound.ticket_digest if desk.bound else 'unbound'}",
     )
     obs = st.text_input("Observed price", "180.10")
     cheat = st.checkbox("Cheat: change symbol to NVDA at send")
@@ -86,18 +94,23 @@ with x:
 
 with a:
     st.subheader("4 · Surveillance")
-    st.write("Halt is a new event. It does not erase history.")
+    st.write("Halt blocks new proposals, binding, and submissions. Existing session events remain visible.")
     if st.button("Halt desk"):
-        desk.surveillance_halt("Operator halt — no further submits this session.")
-        st.warning("Halt recorded.")
-    if st.button("Reset session"):
+        try:
+            desk.surveillance_halt("Operator halt — no further actions this session.")
+            st.warning("Desk halted. All new desk actions are blocked.")
+        except DeskRefusal as exc:
+            st.error(f"DENIED: {exc}")
+    if st.button("Reset demo session"):
         st.session_state.desk = Desk()
         st.rerun()
+    st.caption("Reset creates a new in-memory demo session; the previous session audit is not preserved.")
 
 st.divider()
 st.subheader("Audit tail")
 st.dataframe(list(reversed(desk.events)), use_container_width=True, hide_index=True)
 st.caption(
     "Paper only. Durable worker leases, process-death tests, and compensation tickets live in "
-    "monster-heavy. This console is the seat layout over that contract."
+    "monster-heavy. This standalone, in-memory console demonstrates its separation-of-duties design; "
+    "it is not connected to the durable engine. Session reset clears the local audit."
 )
